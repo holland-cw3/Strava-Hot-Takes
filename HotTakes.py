@@ -30,7 +30,7 @@ def update_joke():
 
     print("Existing Description:", existing_description)
 
-    # Dictionary of strings
+    # Dictionary for descriptions
     strings = {
   
     }
