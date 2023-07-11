@@ -1,6 +1,7 @@
 import random
 import requests
 import urllib3
+import GetTakes
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 auth_url = "https://www.strava.com/oauth/token"
@@ -8,9 +9,9 @@ activities_url = "https://www.strava.com/api/v3/activities"
 
 def update_joke():
     payload = {
-        'client_id': "********",
-        'client_secret': '*******',
-        'refresh_token': '***********',
+        'client_id': "*****",
+        'client_secret': '*************',
+        'refresh_token': '**************',
         'grant_type': "refresh_token",
         'scope': 'read,write',
         'f': 'json'
@@ -26,22 +27,11 @@ def update_joke():
     activity_list = requests.get(activities_url, headers=header, params=param).json()
 
     activity = activity_list[0]
-    existing_description = activity.get('description', '')
+   
 
-    print("Existing Description:", existing_description)
 
-    # Dictionary for descriptions
-    strings = {
-  
-    }
-
-    # Randomly select an item from the dictionary
-    random_key = random.choice(list(strings.keys()))
-    random_description = strings[random_key]
-
-    # Update activity description
     activity_data = {
-        "description": "🔥 HotTakes.py take of the Day 🔥 \n " + random_description
+        "description": "🔥 HotTakes.py take of the Day 🔥 \n " + GetTakes.getHotTake() + "\nBy HotTakes.py v1.6"
     }
 
     update_url = f"{activities_url}/{activity['id']}"
