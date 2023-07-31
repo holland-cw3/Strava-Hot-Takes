@@ -6,7 +6,7 @@ Since the server is hosted on replit, the hosting process is bypassed by the use
 ![image](https://github.com/holland-cw3/Strava-Hot-Takes-v1.7/assets/101285025/c7d983fd-f63d-45fb-94bd-9adb11994c1a)
 
 # Version History
-# V1 
+# V1.0
   - Uses python and the Strava API to update my captions, no automation.
 # V1.5
   - Code is hosted on pythonanywhere to update the code at specific intervals (once a day)
