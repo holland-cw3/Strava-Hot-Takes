@@ -3,4 +3,4 @@ Makes use of the Strava API in order to update my activity descriptions with ran
 
 The 1.7 update makes use of a JSON file reader/writer in order to delete a "Hot Take" upon it's usage in a post. In doing so, cleaning up the code in the main file "HotTakes.py"
 
-![Screenshot (3)](https://github.com/holland-cw3/Strava-Hot-Takes-v1.5/assets/101285025/906ee9a8-f574-42ec-84a5-8d501b187146)
+![image](https://github.com/holland-cw3/Strava-Hot-Takes-v1.7/assets/101285025/c7d983fd-f63d-45fb-94bd-9adb11994c1a)
