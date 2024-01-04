@@ -6,7 +6,7 @@ const fetch = require('node-fetch');
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
 const auth_url = "https://www.strava.com/oauth/token";
-const activities_url = "https://wwdw.strava.com/api/v3/activities";
+const activities_url = "https://www.strava.com/api/v3/activities";
 
 const
     express = require('express'),
