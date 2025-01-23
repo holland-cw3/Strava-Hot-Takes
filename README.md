@@ -1,7 +1,7 @@
 # Strava-Hot-Takes
-Makes use of the Strava API and Node.js in order to update my activity descriptions with random hot takes. The code is hosted on Replit, and uses my own webhook to observe when new acitivities are uploaded, which in turn updates the description. Scripting was previously done in Python, and was converted over to JavaScript due to limit. This process is fully automated.
+Makes use of the Strava API and Node.js in order to update my activity descriptions with random hot takes. The code is hosted on Render.com, and uses my own webhook to observe when new acitivities are uploaded, which in turn updates the description. Scripting was previously done in Python, and was converted over to JavaScript because it's much cooler. This process is fully automated.
 
-Since the server is hosted on replit, the hosting process is bypassed by the use of an app: UptimeRobot which acts as a stand in for a user on the site, so the server is always running
+Since the server is hosted on render, and I'm not willing to pay to bypass inactivity fees, there is a slight delay in updating the description. This will be fixed later.
 
 ![image](https://github.com/holland-cw3/Strava-Hot-Takes-v1.7/assets/101285025/c7d983fd-f63d-45fb-94bd-9adb11994c1a)
 
