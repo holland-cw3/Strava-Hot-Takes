@@ -6,6 +6,10 @@ Since the server is hosted on render, and I'm not willing to pay to bypass inact
 ![image](https://github.com/holland-cw3/Strava-Hot-Takes-v1.7/assets/101285025/c7d983fd-f63d-45fb-94bd-9adb11994c1a)
 
 # Version History
+# V3.1
+  - Fine tuning prompting, and adding regex for messed up messages
+# V3
+  - AI Generated takes integrated with the Gemini API
 # V2.1
   - Replit webhook no longer works, changed to use node-schedule package 
   - Minor modifications to only update new activities, and only update once a day (checks every 5 min)
