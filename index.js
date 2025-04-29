@@ -1,15 +1,19 @@
 "use strict";
+import express from "express";
+import bodyParser from "body-parser";
+import { GoogleGenAI } from "@google/genai";
+import https from "https";
+import takes from "takes";
+
+const app = express().use(bodyParser.json());
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_TOKEN });
 
 const auth_url = "https://www.strava.com/oauth/token";
 const activities_url = "https://www.strava.com/api/v3/activities";
-let activityId = null;
 
-const express = require("express"),
-  bodyParser = require("body-parser"),
-  app = express().use(bodyParser.json());
+app.listen(80, () => console.log("webhook is listening"));
 
-app.listen(process.env.PORT || 80, () => console.log("webhook is listening"));
-
+/* ------- Endpoints ------- */
 app.post("/webhook", (req, res) => {
   console.log("webhook event received!", req.query, req.body);
   res.status(200).send("EVENT_RECEIVED");
@@ -37,7 +41,9 @@ app.get("/webhook", (req, res) => {
   }
 });
 
-function updateTake() {
+/* ------- Getting Takes ------- */
+
+async function updateTake() {
   const payload = {
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
@@ -54,7 +60,7 @@ function updateTake() {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    agent: new (require("https").Agent)({ rejectUnauthorized: false }),
+    agent: new https.Agent({ rejectUnauthorized: false }),
   })
     .then((response) => response.json())
     .then((data) => {
@@ -66,19 +72,12 @@ function updateTake() {
         headers: header,
       })
         .then((activitiesResponse) => activitiesResponse.json())
-        .then((activity_list) => {
+        .then(async (activity_list) => {
           const activity = activity_list[0];
-          console.log(activity.id);
-          if (activityId === activity.id) {
-            console.log("Skipping update. No new activity.");
-            return;
-          }
 
+          const hotTake = await getHotTake();
           const activity_data = {
-            description:
-              "🔥 HotTakesJS take of the Day 🔥 \n " +
-              getHotTake() +
-              "\nBy HotTakesJS",
+            description: `🔥 HotTakesAI take of the Day 🔥 \n${hotTake}\nBy HotTakesAI`,
           };
 
           const update_url = `${activities_url}/${activity.id}`;
@@ -92,7 +91,6 @@ function updateTake() {
           }).then((response) => {
             if (response.status === 200) {
               console.log("Activity description updated!");
-              activityId = activity.id;
             } else {
               console.log("Update Failed. Status code:", response.status);
               response.json().then((errorMessage) => {
@@ -107,105 +105,75 @@ function updateTake() {
     });
 }
 
-function getHotTake() {
-  const myDict = {
-    1: "Costco pizza is the best you will find",
-    2: "Cap's Take: The js should be replaced with .py(I finally read the complaint form)",
-    3: "Batman isn't a superhero.",
-    4: "Taco Bell needs to bring back the Quesarito",
-    5: "Lillian's Take: Lillian - Peppermint in hot chocolate is bad",
-    6: "Any fruity ice cream is just sorbet",
-    7: "Cranberry juice isn't that good, it's just bitter",
-    8: "Gatorade makes for good Smoothies",
-    9: "Bags of chips are just 90% air",
-    10: "Marvel movies aren't that good anymore",
-    11: "Pizza is better upside down",
-    12: "Ben's Take: Marathoning isn't hard",
-    101: "Lillian's Take: Peanut butter bad",
-    13: "Air hockey is weirdly difficult",
-    14: "Lunchables used to be amazing",
-    15: "Ok but fr fr, Harvard John's Mac and Fish is amazing",
-    16: "Taco John's releasing the trademark on Taco Tuesdays is insane",
-    17: "Boneless Chicken Wings are just chicken nuggets",
-    18: "Harvard John's Take: - Putting ice in milk is the move",
-    19: "I don't quite understand the pizzas with no pizza sauce",
-    20: "Vainavi's Take: Food is important for survival",
-    22: "Superman is too overpowered of a superhero, they literally add new powers every year.",
-    23: "Melted butter on top of frosted cinnamon rolls = yummy",
-    24: "Don't listen to Spot Holes 2 (the spot theme from across the spideverse) on a 4am run",
-    25: "Most of today's animated movies don't hold up to the classics, such as cars (should've won the bracket)",
-    26: "Are strawberries berries?",
-    27: "Did you know that cashews come from a fruit?",
-    28: "I always get tom and jerry mixed up",
-    29: "Was supercalifragilisticexpialadocius a word before Mary Poppins?",
-    30: "This one comes from Tim: urban roads are kind of wacky",
-    31: "Brian's Programming Jokes in Joke.py are very funny",
-    32: "McDonald's happy meal toys used to be so much better",
-    33: "Golf is a mid sport, I wish there was pro mini golf",
-    34: "LinkedIn is the new instagram(connect with me pls)",
-    35: "Ben's take: Running a mile in over an hour is impossible. C Holland: Challenge Accepted",
-    36: "Jessies's Take: Bark bark bark, bark baaark",
-    37: "Vainavi's Take: Iced drinks shouldn't have ice",
-    38: "Avocado toast is kind of an odd thing",
-    39: "Vainavi's Take: Cheesecake isn't good",
-    40: "Ok but why doesn't coffee cake have coffee in it?",
-    41: "Vainavi's Take: Milk before cereal ALWAYS",
-    42: "Star Wars prequels are underrated",
-    43: "Vainavi's Take: Thinking of new ones",
-    44: "Gingerbread houses are not structurally feasible to live in",
-    47: "Potato chips are mid, potato chips with ripples however are S-tier",
-    48: "Vainavi's Take: Chipotle is overrated",
-    49: "The best part of a muffin is the crispy top",
-    50: "Sprinkles are useless",
-    51: "Vainavi's Take: Frosting is useless",
-    52: "Smooth peanut butter is far superior to crunchy peanut butter.",
-    53: "Vainavi's Take:  Thinking of new ones",
-    54: "Pumpkin spice-flavored everything has gone too far",
-    55: "Vainavi's Take: All candy sucks",
-    57: "Vainavi's Take: Android > apple",
-    58: "Vainavi's Take:  Thinking of new ones LOL",
-    59: "Vainavi's Take: Drake, nicki minaj, and cardi b are very overrated",
-    60: "Vainavi's Take:  Thinking of new ones",
-    61: "Ok I got lazy, there is no take today.",
-    62: "Sparkling water is just weird, sorry Tim",
-    63: "Vainavi's Take: South campus is the worst dining hall",
-    65: "Vainavi's Take: Raw tomatoes aren't tasty",
-    66: "Vainavi's Take: Sweet and savory food combos don't work",
-    67: "Breakfast for dinner is S-tier",
-    68: "Vainavi's Take: Boba is overhyped",
-    69: "Don't use peanut butter in place of eggs in pancakes",
-    70: "I don't watch many scary movies, but FNAF was legendary",
-    71: "Mustard does not belong on hot dogs",
-    72: "Mr Game and Watch is the best SSB character",
-    73: "Vainavi's Take: French is the least romantic language",
-    74: "Legend of Zelda > Mario",
-    75: "Vainavi's Take: Pasta is better than rice",
-    76: "Vainavi's Take: Blueberries > blackberries",
-    77: "Has anyone seen Beast Wars: Transformers? Just curious. If so, is Optimus Primal the coolest or what?",
-    78: "Vainavi's Take: chicken wing flats are better than drumettes",
-    81: "Spongebob is annoying. If it weren't for Patrick the show would be mid",
-    82: "Leftover pizza for breakfast is a breakfast of champions.",
-    83: "Runs should be longer than shorts",
-    84: "Jeans are comfy to run in",
-    85: "Crocs aren't comfortable, but the customization is admirable",
-    87: "JavaScript is better than Python",
-    88: "Camping is fun until the bugs invade",
-    89: "Time travel movies always end up with plot holes; it's just a paradox. They only work when it isn't taken seriously",
-    90: "More of a question: what were transformers before they were cars?",
-    91: "CaptainSparklez minecraft vids hit different",
-    92: "Applejack is the best pony",
-    93: "Advice: never believe that wasabi is green chicken (don't ask plz)",
-    94: "Python's requirement for indentation hurts me",
-    95: "Hot sauce is very refreshing",
-    96: "Salt your chocolate milk (or hot cocoa)",
-    97: "Apple Cider > Apple juice, both aren't very good tho",
-    98: "Anyone remember Webkins? My character was a parrot called tweety perry.",
-    99: "Water doesn't have a flavor, sparkling water on the other hand does.",
-    100: "The licorice jelly beans are absolutely gross",
-  };
+// Return either a random personalized hot take or an ai generated one
+async function getHotTake() {
+  const keys = Object.keys(takes);
+  const randomKey = keys[Math.floor(Math.random() * Object.keys(takes).length)];
 
-  const randomKey =
-    Object.keys(myDict)[Math.floor(Math.random() * Object.keys(myDict).length)];
-  const randomDescription = myDict[randomKey];
-  return randomDescription;
+  return Math.random() >= 0.5 ? await AITake() : takes[randomKey];
+}
+
+const HotTakes =
+  "Costco pizza is the best you will find, Tim's Take: purple line is worth the delays, Batman isn't a superhero., Taco Bell needs to bring back the Quesarito, Lillian's Take: Lillian - Peppermint in hot chocolate is bad. Any fruity ice cream is just sorbet. Cranberry juice isn't that good, it's just bitter. Gatorade makes for good Smoothies. Bags of chips are just 90% air. Marvel movies aren't that good anymore. Pizza is better upside down. Ben's Take: Marathoning isn't hard. Lillian's Take: Peanut butter bad. Air hockey is weirdly difficult. Lunchables used to be amazing. Ok but fr fr, Harvard John's Mac and Fish is amazing. Taco John's releasing the trademark on Taco Tuesdays is insane. Boneless Chicken Wings are just chicken nuggets. Harvard John's Take: - Putting ice in milk is the move. I don't quite understand the pizzas with no pizza sauce. Vainavi's Take: Food is important for survival. Superman is too overpowered of a superhero, they literally add new powers every year. Melted butter on top of frosted cinnamon rolls = yummy. Don't listen to Spot Holes 2 (the spot theme from across the spideverse) on a 4am run. Most of today's animated movies don't hold up to the classics, such as cars (should've won the bracket). Strawberries are improperly named. Did you know that cashews come from a fruit? I always get tom and jerry mixed up. Was supercalifragilisticexpialadocius a word before Mary Poppins? This one comes from Tim: urban roads are kind of wacky. Brian's Programming Jokes in Joke.py are very funny. McDonald's happy meal toys used to be so much better. Golf is a mid sport, I wish there was pro mini golf. LinkedIn is the new instagram(connect with me pls). Ben's take: Running a mile in over an hour is impossible. C Holland: Challenge Accepted. Jessies's Take: Bark bark bark, bark baaark. Vainavi's Take: Iced drinks shouldn't have ice. Avocado toast is kind of an odd thing.  Vainavi's Take: Cheesecake isn't good. Ok but why doesn't coffee cake have coffee in it? Vainavi's Take: Milk before cereal ALWAYS. Star Wars prequels are underrated. Gingerbread houses are not structurally feasible to live in. Potato chips are mid, potato chips with ripples however are S-tier. Vainavi's Take: Chipotle is overrated. The best part of a muffin is the crispy top. Sprinkles are useless. Vainavi's Take: Frosting is useless. Smooth peanut butter is far superior to crunchy peanut butter.";
+//  "Tim's Take: milk before cereal is trash."
+//  "Pumpkin spice-flavored everything has gone too far",
+//  "Vainavi's Take: All candy sucks",
+//  "Vainavi's Take: Android > apple",
+//  "Ben's Take: Eren Jaeger was right",
+//  "Vainavi's Take: Drake, nicki minaj, and cardi b are very overrated",
+//  "Tim's Take:  self driving cars and EVs are a distraction from the real issue of underfunde
+//  "Tim's Take: Sparkling water is great",
+//  "Vainavi's Take: South campus is the worst dining hall",
+//  "Vainavi's Take: Raw tomatoes aren't tasty",
+//  "Vainavi's Take: Sweet and savory food combos don't work",
+//  "Breakfast for dinner is S-tier",
+//  "Vainavi's Take: Boba is overhyped",
+//  "Don't use peanut butter in place of eggs in pancakes",
+//  "I don't watch many scary movies, but FNAF was legendary",
+//  "Mustard does not belong on hot dogs",
+//  "Mr Game and Watch is the best SSB character",
+//  "Vainavi's Take: French is the least romantic language",
+//  "Legend of Zelda > Mario",
+//  "Vainavi's Take: Pasta is better than rice",
+//  "Vainavi's Take: Blueberries > blackberries",
+//  "Has anyone seen Beast Wars: Transformers? Just curious. If so, is Optimus Primal the coole
+//  "Vainavi's Take: chicken wing flats are better than drumettes",
+//  "Spongebob is annoying. If it weren't for Patrick the show would be mid",
+//  "Leftover pizza for breakfast is a breakfast of champions.",
+//  "Runs should be longer than shorts",
+//  "Jeans are comfy to run in",
+//  "Crocs aren't comfortable, but the customization is admirable",
+//  "JavaScript is better than Python",
+//  "Camping is fun until the bugs invade",
+//  "Time travel movies always end up with plot holes; it's just a paradox. They only work when
+//  "More of a question: what were transformers before they were cars?",
+//  "CaptainSparklez minecraft vids hit different",
+//  "Applejack is the best pony",
+//  "Advice: never believe that wasabi is green chicken (don't ask plz)",
+//  "Tim's Take: ice cream is not that good",
+//  "Hot sauce is very refreshing",
+//  "Salt your chocolate milk (or hot cocoa)",
+//  "Apple Cider > Apple juice, both aren't very good tho",
+//  "Anyone remember Webkins? My character was a parrot called tweety perry.",
+//  "Water doesn't have a flavor, sparkling water on the other hand does.",
+//  "The licorice jelly beans are absolutely gross",
+//  "Thick of it by KSI is a legendary song",
+// "New Disney movies are just lazy"",
+// "
+
+async function AITake() {
+  const offLimits =
+    "math, calculator, grammar, binary code, oxford comma, grammar";
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: `Given the following hot takes, create a super duper silly one of your own that follows the pattern 'AI's Take: <Hot Take>' Refrain from the following topics${offLimits}. Here are the takes: ${HotTakes}`,
+  });
+
+  const aiTake = response.candidates[0].content.parts[0].text;
+  const regex = "AI's Take: .*.";
+  const found = aiTake.match(regex);
+
+  let result = found[0].replaceAll("\n", "");
+  return result;
 }
