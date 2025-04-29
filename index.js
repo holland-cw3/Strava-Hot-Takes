@@ -3,7 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import { GoogleGenAI } from "@google/genai";
 import https from "https";
-import takes from "takes";
+import takes from "./takes.js";
 
 const app = express().use(bodyParser.json());
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_TOKEN });
